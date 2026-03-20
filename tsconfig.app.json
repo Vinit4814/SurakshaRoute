@@ -13,8 +13,12 @@
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
-    "noEmit": true,
+    "composite": true,
+    "emitDeclarationOnly": true,
+
     "jsx": "react-jsx",
+
+
 
     /* Linting */
     "strict": true,
@@ -22,7 +26,12 @@
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true
+    "noUncheckedSideEffectImports": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   },
+
   "include": ["src"]
 }

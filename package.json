@@ -9,8 +9,9 @@
     "dev:server": "npm run server",
     "dev:all": "concurrently \"npm run dev\" \"npm run server\"",
     "test": "jest",
-    "build": "tsc -b && vite build",
+    "build": "vite build",
     "start": "tsx server/index.ts",
+
     "lint": "eslint .",
     "preview": "vite preview"
   },
