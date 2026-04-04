@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Suraksha Route"
+version = "1.0.0"
+id = "artifacts/suraksha-route"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 21441
+
+[services.development]
+run = "pnpm --filter @workspace/suraksha-route run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/suraksha-route", "run", "build" ]
+publicDir = "artifacts/suraksha-route/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "21441"
+BASE_PATH = "/"

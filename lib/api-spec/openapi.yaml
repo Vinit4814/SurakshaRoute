@@ -3,20 +3,42 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Suraksha Route API - Delivery Worker Safety and Support Platform
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: workers
+    description: Worker management
+  - name: earnings
+    description: Worker earnings tracking
+  - name: emergencies
+    description: Emergency alerts and zones
+  - name: compensation
+    description: Compensation requests
+  - name: accidents
+    description: Accident reporting and support
+  - name: insurance
+    description: Insurance eligibility
+  - name: complaints
+    description: Worker complaints
+  - name: notifications
+    description: Worker notifications
+  - name: admin
+    description: Admin operations
+  - name: zones
+    description: Risk zone management
+  - name: dashboard
+    description: Dashboard summaries
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +46,852 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /workers:
+    get:
+      operationId: listWorkers
+      tags: [workers]
+      summary: List all workers
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, inactive, suspended]
+        - name: zoneId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of workers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Worker"
+    post:
+      operationId: createWorker
+      tags: [workers]
+      summary: Register a new worker
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateWorkerBody"
+      responses:
+        "201":
+          description: Worker created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Worker"
+
+  /workers/{workerId}:
+    get:
+      operationId: getWorker
+      tags: [workers]
+      summary: Get worker by ID
+      parameters:
+        - name: workerId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Worker details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Worker"
+        "404":
+          description: Worker not found
+    put:
+      operationId: updateWorker
+      tags: [workers]
+      summary: Update worker details
+      parameters:
+        - name: workerId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateWorkerBody"
+      responses:
+        "200":
+          description: Worker updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Worker"
+
+  /workers/{workerId}/earnings:
+    get:
+      operationId: getWorkerEarnings
+      tags: [earnings]
+      summary: Get earnings history for a worker
+      parameters:
+        - name: workerId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Worker earnings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Earning"
+    post:
+      operationId: addEarning
+      tags: [earnings]
+      summary: Add a new earning entry
+      parameters:
+        - name: workerId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateEarningBody"
+      responses:
+        "201":
+          description: Earning added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Earning"
+
+  /workers/{workerId}/earnings/summary:
+    get:
+      operationId: getWorkerEarningsSummary
+      tags: [earnings]
+      summary: Get earnings summary and average for a worker
+      parameters:
+        - name: workerId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Earnings summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EarningsSummary"
+
+  /zones:
+    get:
+      operationId: listZones
+      tags: [zones]
+      summary: List all risk zones
+      responses:
+        "200":
+          description: List of zones
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Zone"
+    post:
+      operationId: createZone
+      tags: [zones]
+      summary: Create a new zone
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateZoneBody"
+      responses:
+        "201":
+          description: Zone created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Zone"
+
+  /zones/{zoneId}:
+    get:
+      operationId: getZone
+      tags: [zones]
+      summary: Get zone details
+      parameters:
+        - name: zoneId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Zone details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Zone"
+    put:
+      operationId: updateZone
+      tags: [zones]
+      summary: Update zone risk score and status
+      parameters:
+        - name: zoneId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateZoneBody"
+      responses:
+        "200":
+          description: Zone updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Zone"
+
+  /emergencies:
+    get:
+      operationId: listEmergencies
+      tags: [emergencies]
+      summary: List all emergency alerts
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, resolved, monitoring]
+        - name: zoneId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of emergencies
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Emergency"
+    post:
+      operationId: createEmergency
+      tags: [emergencies]
+      summary: Create emergency alert
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateEmergencyBody"
+      responses:
+        "201":
+          description: Emergency created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Emergency"
+
+  /emergencies/{emergencyId}:
+    get:
+      operationId: getEmergency
+      tags: [emergencies]
+      summary: Get emergency details
+      parameters:
+        - name: emergencyId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Emergency details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Emergency"
+    put:
+      operationId: updateEmergency
+      tags: [emergencies]
+      summary: Update emergency status
+      parameters:
+        - name: emergencyId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateEmergencyBody"
+      responses:
+        "200":
+          description: Emergency updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Emergency"
+
+  /workers/{workerId}/safety-alert:
+    post:
+      operationId: sendSafetyAlert
+      tags: [emergencies]
+      summary: Worker sends a safety alert signal
+      parameters:
+        - name: workerId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendSafetyAlertBody"
+      responses:
+        "201":
+          description: Safety alert sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SafetyAlert"
+
+  /workers/{workerId}/safety-alerts:
+    get:
+      operationId: getWorkerSafetyAlerts
+      tags: [emergencies]
+      summary: Get safety alerts for a worker
+      parameters:
+        - name: workerId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Worker safety alerts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SafetyAlert"
+
+  /compensation:
+    get:
+      operationId: listCompensationRequests
+      tags: [compensation]
+      summary: List all compensation requests
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, approved, rejected, paid]
+        - name: workerId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of compensation requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CompensationRequest"
+    post:
+      operationId: createCompensationRequest
+      tags: [compensation]
+      summary: Submit a compensation request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCompensationBody"
+      responses:
+        "201":
+          description: Compensation request created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CompensationRequest"
+
+  /compensation/{requestId}:
+    get:
+      operationId: getCompensationRequest
+      tags: [compensation]
+      summary: Get compensation request details
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Compensation request details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CompensationRequest"
+    put:
+      operationId: updateCompensationRequest
+      tags: [compensation]
+      summary: Approve or reject a compensation request
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateCompensationBody"
+      responses:
+        "200":
+          description: Compensation updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CompensationRequest"
+
+  /accidents:
+    get:
+      operationId: listAccidents
+      tags: [accidents]
+      summary: List all accident reports
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [reported, investigating, resolved, closed]
+        - name: workerId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of accident reports
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Accident"
+    post:
+      operationId: reportAccident
+      tags: [accidents]
+      summary: Report an accident
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAccidentBody"
+      responses:
+        "201":
+          description: Accident reported
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Accident"
+
+  /accidents/{accidentId}:
+    get:
+      operationId: getAccident
+      tags: [accidents]
+      summary: Get accident details
+      parameters:
+        - name: accidentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Accident details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Accident"
+    put:
+      operationId: updateAccident
+      tags: [accidents]
+      summary: Update accident status
+      parameters:
+        - name: accidentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateAccidentBody"
+      responses:
+        "200":
+          description: Accident updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Accident"
+
+  /insurance/check:
+    post:
+      operationId: checkInsuranceEligibility
+      tags: [insurance]
+      summary: Check if a worker is eligible for insurance
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InsuranceCheckBody"
+      responses:
+        "200":
+          description: Insurance eligibility result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InsuranceEligibility"
+
+  /insurance/claims:
+    get:
+      operationId: listInsuranceClaims
+      tags: [insurance]
+      summary: List insurance claims
+      parameters:
+        - name: workerId
+          in: query
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [submitted, reviewing, approved, rejected, paid]
+      responses:
+        "200":
+          description: Insurance claims list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InsuranceClaim"
+    post:
+      operationId: createInsuranceClaim
+      tags: [insurance]
+      summary: Submit an insurance claim
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateInsuranceClaimBody"
+      responses:
+        "201":
+          description: Insurance claim submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InsuranceClaim"
+
+  /insurance/claims/{claimId}:
+    get:
+      operationId: getInsuranceClaim
+      tags: [insurance]
+      summary: Get insurance claim details
+      parameters:
+        - name: claimId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Claim details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InsuranceClaim"
+    put:
+      operationId: updateInsuranceClaim
+      tags: [insurance]
+      summary: Update insurance claim status
+      parameters:
+        - name: claimId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateInsuranceClaimBody"
+      responses:
+        "200":
+          description: Claim updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InsuranceClaim"
+
+  /complaints:
+    get:
+      operationId: listComplaints
+      tags: [complaints]
+      summary: List all complaints
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [open, investigating, resolved, dismissed]
+        - name: workerId
+          in: query
+          schema:
+            type: integer
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [unfair_deduction, forced_unsafe_work, harassment, payment_delay, other]
+      responses:
+        "200":
+          description: List of complaints
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Complaint"
+    post:
+      operationId: createComplaint
+      tags: [complaints]
+      summary: Submit a complaint
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateComplaintBody"
+      responses:
+        "201":
+          description: Complaint created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Complaint"
+
+  /complaints/{complaintId}:
+    get:
+      operationId: getComplaint
+      tags: [complaints]
+      summary: Get complaint details
+      parameters:
+        - name: complaintId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Complaint details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Complaint"
+    put:
+      operationId: updateComplaint
+      tags: [complaints]
+      summary: Update complaint status
+      parameters:
+        - name: complaintId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateComplaintBody"
+      responses:
+        "200":
+          description: Complaint updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Complaint"
+
+  /notifications:
+    get:
+      operationId: listNotifications
+      tags: [notifications]
+      summary: List notifications for a worker
+      parameters:
+        - name: workerId
+          in: query
+          schema:
+            type: integer
+        - name: read
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Notifications list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Notification"
+    post:
+      operationId: createNotification
+      tags: [notifications]
+      summary: Create a notification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateNotificationBody"
+      responses:
+        "201":
+          description: Notification created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Notification"
+
+  /notifications/{notificationId}/read:
+    put:
+      operationId: markNotificationRead
+      tags: [notifications]
+      summary: Mark a notification as read
+      parameters:
+        - name: notificationId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Notification marked as read
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Notification"
+
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Get overall dashboard summary for admin
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  /dashboard/worker/{workerId}:
+    get:
+      operationId: getWorkerDashboard
+      tags: [dashboard]
+      summary: Get dashboard data for a specific worker
+      parameters:
+        - name: workerId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Worker dashboard data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkerDashboard"
+
+  /dashboard/zone-risks:
+    get:
+      operationId: getZoneRiskOverview
+      tags: [dashboard]
+      summary: Get risk overview for all zones
+      responses:
+        "200":
+          description: Zone risk overview
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ZoneRiskSummary"
+
+  /dashboard/recent-activity:
+    get:
+      operationId: getRecentActivity
+      tags: [dashboard]
+      summary: Get recent platform activity feed
+      responses:
+        "200":
+          description: Recent activity
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityItem"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +902,790 @@ components:
       required:
         - status
 
+    Worker:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        vehicleType:
+          type: string
+          enum: [bike, scooter, bicycle, auto, other]
+        zoneId:
+          type: integer
+        zoneName:
+          type: string
+        status:
+          type: string
+          enum: [active, inactive, suspended]
+        joinedAt:
+          type: string
+          format: date-time
+        averageDailyEarning:
+          type: number
+        totalEarnings:
+          type: number
+        totalDeliveries:
+          type: integer
+      required:
+        - id
+        - name
+        - phone
+        - status
+        - joinedAt
+
+    CreateWorkerBody:
+      type: object
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        vehicleType:
+          type: string
+          enum: [bike, scooter, bicycle, auto, other]
+        zoneId:
+          type: integer
+      required:
+        - name
+        - phone
+        - vehicleType
+
+    UpdateWorkerBody:
+      type: object
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        vehicleType:
+          type: string
+        zoneId:
+          type: integer
+        status:
+          type: string
+          enum: [active, inactive, suspended]
+
+    Earning:
+      type: object
+      properties:
+        id:
+          type: integer
+        workerId:
+          type: integer
+        date:
+          type: string
+          format: date
+        amount:
+          type: number
+        deliveries:
+          type: integer
+        hoursWorked:
+          type: number
+        notes:
+          type: string
+      required:
+        - id
+        - workerId
+        - date
+        - amount
+        - deliveries
+
+    CreateEarningBody:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        amount:
+          type: number
+        deliveries:
+          type: integer
+        hoursWorked:
+          type: number
+        notes:
+          type: string
+      required:
+        - date
+        - amount
+        - deliveries
+
+    EarningsSummary:
+      type: object
+      properties:
+        workerId:
+          type: integer
+        totalEarnings:
+          type: number
+        averageDailyEarning:
+          type: number
+        totalDeliveries:
+          type: integer
+        totalDaysWorked:
+          type: integer
+        last7DaysEarnings:
+          type: number
+        last30DaysEarnings:
+          type: number
+        earningsThisMonth:
+          type: number
+        highestEarningDay:
+          type: number
+        lowestEarningDay:
+          type: number
+      required:
+        - workerId
+        - totalEarnings
+        - averageDailyEarning
+        - totalDeliveries
+        - totalDaysWorked
+
+    Zone:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        city:
+          type: string
+        riskScore:
+          type: integer
+          minimum: 0
+          maximum: 100
+        riskLevel:
+          type: string
+          enum: [safe, moderate, high, critical]
+        isBlocked:
+          type: boolean
+        activeEmergencies:
+          type: integer
+        workerCount:
+          type: integer
+        lastUpdated:
+          type: string
+          format: date-time
+        description:
+          type: string
+      required:
+        - id
+        - name
+        - riskScore
+        - riskLevel
+        - isBlocked
+
+    CreateZoneBody:
+      type: object
+      properties:
+        name:
+          type: string
+        city:
+          type: string
+        riskScore:
+          type: integer
+        description:
+          type: string
+      required:
+        - name
+        - city
+
+    UpdateZoneBody:
+      type: object
+      properties:
+        riskScore:
+          type: integer
+        riskLevel:
+          type: string
+          enum: [safe, moderate, high, critical]
+        isBlocked:
+          type: boolean
+        description:
+          type: string
+
+    Emergency:
+      type: object
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+          enum: [flood, earthquake, heavy_rain, social_unrest, road_blockage, curfew, other]
+        title:
+          type: string
+        description:
+          type: string
+        zoneId:
+          type: integer
+        zoneName:
+          type: string
+        status:
+          type: string
+          enum: [active, resolved, monitoring]
+        severity:
+          type: string
+          enum: [low, medium, high, critical]
+        reportedAt:
+          type: string
+          format: date-time
+        resolvedAt:
+          type: string
+          format: date-time
+        affectedWorkers:
+          type: integer
+      required:
+        - id
+        - type
+        - title
+        - status
+        - severity
+        - reportedAt
+
+    CreateEmergencyBody:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [flood, earthquake, heavy_rain, social_unrest, road_blockage, curfew, other]
+        title:
+          type: string
+        description:
+          type: string
+        zoneId:
+          type: integer
+        severity:
+          type: string
+          enum: [low, medium, high, critical]
+      required:
+        - type
+        - title
+        - severity
+
+    UpdateEmergencyBody:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [active, resolved, monitoring]
+        description:
+          type: string
+
+    SafetyAlert:
+      type: object
+      properties:
+        id:
+          type: integer
+        workerId:
+          type: integer
+        workerName:
+          type: string
+        alertType:
+          type: string
+          enum: [sos, unsafe_route, accident, medical, other]
+        message:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+        status:
+          type: string
+          enum: [active, acknowledged, resolved]
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - workerId
+        - alertType
+        - status
+        - createdAt
+
+    SendSafetyAlertBody:
+      type: object
+      properties:
+        alertType:
+          type: string
+          enum: [sos, unsafe_route, accident, medical, other]
+        message:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+      required:
+        - alertType
+
+    CompensationRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+        workerId:
+          type: integer
+        workerName:
+          type: string
+        emergencyId:
+          type: integer
+        emergencyType:
+          type: string
+        requestedAmount:
+          type: number
+        approvedAmount:
+          type: number
+        status:
+          type: string
+          enum: [pending, approved, rejected, paid]
+        reason:
+          type: string
+        daysAffected:
+          type: integer
+        averageDailyEarning:
+          type: number
+        submittedAt:
+          type: string
+          format: date-time
+        resolvedAt:
+          type: string
+          format: date-time
+        adminNotes:
+          type: string
+      required:
+        - id
+        - workerId
+        - requestedAmount
+        - status
+        - reason
+        - daysAffected
+        - submittedAt
+
+    CreateCompensationBody:
+      type: object
+      properties:
+        workerId:
+          type: integer
+        emergencyId:
+          type: integer
+        reason:
+          type: string
+        daysAffected:
+          type: integer
+        description:
+          type: string
+      required:
+        - workerId
+        - reason
+        - daysAffected
+
+    UpdateCompensationBody:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [approved, rejected, paid]
+        approvedAmount:
+          type: number
+        adminNotes:
+          type: string
+
+    Accident:
+      type: object
+      properties:
+        id:
+          type: integer
+        workerId:
+          type: integer
+        workerName:
+          type: string
+        description:
+          type: string
+        location:
+          type: string
+        severity:
+          type: string
+          enum: [minor, moderate, severe, critical]
+        injuryType:
+          type: string
+        status:
+          type: string
+          enum: [reported, investigating, resolved, closed]
+        reportedAt:
+          type: string
+          format: date-time
+        nextStep:
+          type: string
+        insuranceClaimId:
+          type: integer
+      required:
+        - id
+        - workerId
+        - description
+        - severity
+        - status
+        - reportedAt
+
+    CreateAccidentBody:
+      type: object
+      properties:
+        workerId:
+          type: integer
+        description:
+          type: string
+        location:
+          type: string
+        severity:
+          type: string
+          enum: [minor, moderate, severe, critical]
+        injuryType:
+          type: string
+      required:
+        - workerId
+        - description
+        - severity
+
+    UpdateAccidentBody:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [reported, investigating, resolved, closed]
+        nextStep:
+          type: string
+        insuranceClaimId:
+          type: integer
+
+    InsuranceCheckBody:
+      type: object
+      properties:
+        workerId:
+          type: integer
+        accidentId:
+          type: integer
+      required:
+        - workerId
+
+    InsuranceEligibility:
+      type: object
+      properties:
+        workerId:
+          type: integer
+        eligible:
+          type: boolean
+        reason:
+          type: string
+        coverageAmount:
+          type: number
+        eligibilityFactors:
+          type: array
+          items:
+            type: string
+        requiredDocuments:
+          type: array
+          items:
+            type: string
+      required:
+        - workerId
+        - eligible
+        - reason
+
+    InsuranceClaim:
+      type: object
+      properties:
+        id:
+          type: integer
+        workerId:
+          type: integer
+        workerName:
+          type: string
+        accidentId:
+          type: integer
+        claimAmount:
+          type: number
+        approvedAmount:
+          type: number
+        status:
+          type: string
+          enum: [submitted, reviewing, approved, rejected, paid]
+        submittedAt:
+          type: string
+          format: date-time
+        resolvedAt:
+          type: string
+          format: date-time
+        description:
+          type: string
+        adminNotes:
+          type: string
+      required:
+        - id
+        - workerId
+        - claimAmount
+        - status
+        - submittedAt
+
+    CreateInsuranceClaimBody:
+      type: object
+      properties:
+        workerId:
+          type: integer
+        accidentId:
+          type: integer
+        claimAmount:
+          type: number
+        description:
+          type: string
+      required:
+        - workerId
+        - claimAmount
+        - description
+
+    UpdateInsuranceClaimBody:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [reviewing, approved, rejected, paid]
+        approvedAmount:
+          type: number
+        adminNotes:
+          type: string
+
+    Complaint:
+      type: object
+      properties:
+        id:
+          type: integer
+        workerId:
+          type: integer
+        workerName:
+          type: string
+        type:
+          type: string
+          enum: [unfair_deduction, forced_unsafe_work, harassment, payment_delay, other]
+        subject:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [open, investigating, resolved, dismissed]
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+        submittedAt:
+          type: string
+          format: date-time
+        resolvedAt:
+          type: string
+          format: date-time
+        adminNotes:
+          type: string
+        resolution:
+          type: string
+      required:
+        - id
+        - workerId
+        - type
+        - subject
+        - description
+        - status
+        - priority
+        - submittedAt
+
+    CreateComplaintBody:
+      type: object
+      properties:
+        workerId:
+          type: integer
+        type:
+          type: string
+          enum: [unfair_deduction, forced_unsafe_work, harassment, payment_delay, other]
+        subject:
+          type: string
+        description:
+          type: string
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+      required:
+        - workerId
+        - type
+        - subject
+        - description
+
+    UpdateComplaintBody:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [investigating, resolved, dismissed]
+        adminNotes:
+          type: string
+        resolution:
+          type: string
+
+    Notification:
+      type: object
+      properties:
+        id:
+          type: integer
+        workerId:
+          type: integer
+        title:
+          type: string
+        message:
+          type: string
+        type:
+          type: string
+          enum: [emergency_alert, payment_update, compensation_update, complaint_update, safety_warning, insurance_update, general]
+        read:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - title
+        - message
+        - type
+        - read
+        - createdAt
+
+    CreateNotificationBody:
+      type: object
+      properties:
+        workerId:
+          type: integer
+        title:
+          type: string
+        message:
+          type: string
+        type:
+          type: string
+          enum: [emergency_alert, payment_update, compensation_update, complaint_update, safety_warning, insurance_update, general]
+      required:
+        - title
+        - message
+        - type
+
+    DashboardSummary:
+      type: object
+      properties:
+        totalWorkers:
+          type: integer
+        activeWorkers:
+          type: integer
+        activeEmergencies:
+          type: integer
+        blockedZones:
+          type: integer
+        pendingCompensations:
+          type: integer
+        pendingComplaints:
+          type: integer
+        openAccidents:
+          type: integer
+        pendingInsuranceClaims:
+          type: integer
+        totalCompensationPaidThisMonth:
+          type: number
+        recentSafetyAlerts:
+          type: integer
+        criticalZones:
+          type: integer
+      required:
+        - totalWorkers
+        - activeWorkers
+        - activeEmergencies
+        - blockedZones
+        - pendingCompensations
+        - pendingComplaints
+
+    WorkerDashboard:
+      type: object
+      properties:
+        worker:
+          $ref: "#/components/schemas/Worker"
+        earningsSummary:
+          $ref: "#/components/schemas/EarningsSummary"
+        activeEmergenciesInZone:
+          type: integer
+        zoneStatus:
+          type: string
+          enum: [safe, moderate, high, critical]
+        pendingCompensations:
+          type: integer
+        openComplaints:
+          type: integer
+        unreadNotifications:
+          type: integer
+        recentEarnings:
+          type: array
+          items:
+            $ref: "#/components/schemas/Earning"
+        recentNotifications:
+          type: array
+          items:
+            $ref: "#/components/schemas/Notification"
+      required:
+        - worker
+
+    ZoneRiskSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        riskScore:
+          type: integer
+        riskLevel:
+          type: string
+          enum: [safe, moderate, high, critical]
+        isBlocked:
+          type: boolean
+        workerCount:
+          type: integer
+        activeEmergencies:
+          type: integer
+      required:
+        - id
+        - name
+        - riskScore
+        - riskLevel
+        - isBlocked
+
+    ActivityItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+          enum: [emergency, compensation, accident, complaint, safety_alert, insurance, zone_update]
+        title:
+          type: string
+        description:
+          type: string
+        severity:
+          type: string
+          enum: [info, warning, danger, success]
+        timestamp:
+          type: string
+          format: date-time
+        relatedId:
+          type: integer
+      required:
+        - id
+        - type
+        - title
+        - severity
+        - timestamp
